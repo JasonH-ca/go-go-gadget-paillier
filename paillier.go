@@ -60,6 +60,39 @@ func GenerateKey(random io.Reader, bits int) (*PrivateKey, error) {
 
 }
 
+func FromPQ(p *big.Int, q *big.Int) (*PrivateKey, error) {
+	n := new(big.Int).Mul(p, q)
+	pp := new(big.Int).Mul(p, p)
+	qq := new(big.Int).Mul(q, q)
+
+	return &PrivateKey{
+		PublicKey: PublicKey{
+			N:        n,
+			NSquared: new(big.Int).Mul(n, n),
+			G:        new(big.Int).Add(n, one), // g = n + 1
+		},
+		p:         p,
+		pp:        pp,
+		pminusone: new(big.Int).Sub(p, one),
+		q:         q,
+		qq:        qq,
+		qminusone: new(big.Int).Sub(q, one),
+		pinvq:     new(big.Int).ModInverse(p, q),
+		hp:        h(p, pp, n),
+		hq:        h(q, qq, n),
+		n:         n,
+	}, nil
+
+}
+
+func FromN(n *big.Int) (*PublicKey, error) {
+	return &PublicKey{
+			N:        n,
+			NSquared: new(big.Int).Mul(n, n),
+			G:        new(big.Int).Add(n, one), // g = n + 1
+		}, nil
+}
+
 // PrivateKey represents a Paillier key.
 type PrivateKey struct {
 	PublicKey
